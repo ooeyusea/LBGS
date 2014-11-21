@@ -28,6 +28,9 @@ public:
 
 	Acceptor * createAcceptor();
 	Connector * createConnector();
+	
+	void destroyAcceptor(Acceptor * accpetor);
+	void destroyConnector(Connector * connector);
 
 	bool add(Acceptor * acceptor);
 	void remove(Acceptor * acceptor);

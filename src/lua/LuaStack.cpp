@@ -10,6 +10,7 @@
 #include "luabind.h"
 #include "lpack.h"
 #include "pb.h"
+#include "lseri.h"
 
 namespace lua_extend {
 #include "lua_constants.h"
@@ -90,6 +91,7 @@ bool LuaStack::init()
 
 	luaopen_pb(_state);
 	luaopen_pack(_state);
+	luaopen_seri(_state);
 
     registerNetToLua(_state);
 

@@ -14,12 +14,12 @@ function CSPacketBuilder:loadReq(gateId, inGateId, platform, server, username)
 	return self:pack(ProtocolCode.TSAndCS.LoadReq, msg)
 end
 
-function CSPacketBuilder:checkAndNotifyOffline(guid)
+function CSPacketBuilder:checkAndNotifyOffline(gateId, inGateId, guid)
 	local msg = TSToCSProtocol_pb.CheckAndNotifyOffline()
 	msg.gateId = gateId
 	msg.inGateId = inGateId
 	msg.guid = guid
-	return self:pack(ProtocolCode.TSAndCS.NotifyOffline, msg)
+	return self:pack(ProtocolCode.TSAndCS.CheckAndNotifyOffline, msg)
 end
 
-return GatePacketBuilder
+return CSPacketBuilder

@@ -215,8 +215,8 @@ void Connection::onIn()
 			{
 				onError();
 				close();
-			}
-			printf("recv:%d", errno);
+			    printf("recv:%d\n", errno);
+            }
 			break;
 		}
 		else

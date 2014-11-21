@@ -64,6 +64,22 @@ int registerNetModuleFunctionAddConnector(lua_State * state)
 	return 0;
 }
 
+int registerNetModuleFunctionDestroyAcceptor(lua_State * state)
+{
+	net::NetModule * t = toObject<net::NetModule>(state, -2, "NetModule");
+	net::Acceptor * acceptor = toObject<net::Acceptor>(state, -1, "Acceptor");
+	t->destroyAcceptor(acceptor);
+	return 0;
+}
+
+int registerNetModuleFunctionDestroyConnector(lua_State * state)
+{
+	net::NetModule * t = toObject<net::NetModule>(state, -2, "NetModule");
+	net::Connector * connector = toObject<net::Connector>(state, -1, "Connector");
+	t->destroyConnector(connector);
+	return 0;
+}
+
 void registerNetModule(lua_State * state)
 {
 	createClass(state, "NetModule");
@@ -72,6 +88,8 @@ void registerNetModule(lua_State * state)
 	createClassFunction(state, "NetModule", "createConnector", registerNetModuleFunctionCreateConnector);
 	createClassFunction(state, "NetModule", "addAcceptor", registerNetModuleFunctionAddAcceptor);
 	createClassFunction(state, "NetModule", "addConnector", registerNetModuleFunctionAddConnector);
+	createClassFunction(state, "NetModule", "destroyAcceptor", registerNetModuleFunctionDestroyAcceptor);
+	createClassFunction(state, "NetModule", "destroyConnector", registerNetModuleFunctionDestroyConnector);
 }
 
 int registerAcceptorFunctionInit(lua_State * state)
@@ -150,7 +168,7 @@ int registerConnectionFunctionSetSession(lua_State * state)
 int registerConnectionFunctionSend(lua_State * state)
 {
 	net::Connection * t = toObject<net::Connection>(state, -2, "Connection");
-	unsigned int len = 0;
+	size_t len = 0;
 	const char * buffer = lua_tolstring(state, -1, &len);
 	if (len > 0)
 		t->send(buffer, len);

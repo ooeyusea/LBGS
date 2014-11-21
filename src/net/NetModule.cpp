@@ -45,10 +45,12 @@ void NetModule::release()
 
 void NetModule::run()
 {
+    
+	int wait = (int)_accepts.size() + (int)_connections.size() + (int)_connectors.size();
+    if (wait > 0)
 	{
 		epoll_event evts[MAX_EPOLL_SIZE];
 
-		int wait = (int)_accepts.size() + (int)_connections.size() + (int)_connectors.size();
 		int count = epoll_wait(_epollFd, evts, wait, 50);
 		if(count < 0)
 		{
@@ -119,6 +121,16 @@ Acceptor * NetModule::createAcceptor()
 Connector * NetModule::createConnector()
 {
 	return new Connector(this);
+}
+
+void NetModule::destroyAcceptor(Acceptor * accpetor)
+{
+	delete accpetor;
+}
+
+void NetModule::destroyConnector(Connector * connector)
+{
+	delete connector;
 }
 
 bool NetModule::add(Acceptor * acceptor)

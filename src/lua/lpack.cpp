@@ -33,7 +33,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#include <lua/lua.hpp>
+#include <luajit/lua.hpp>
 
 static void badcode(lua_State *L, int c)
 {

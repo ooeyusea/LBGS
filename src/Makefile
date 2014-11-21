@@ -7,7 +7,7 @@ INCS=-I./
 LIBS=-lluajit-5.1
 OBJ_DIR=../output
 TARGET=../bin/serverd
-CXXFLAGS=
+CXXFLAGS=-O0 -g 
 
 OUTPUT_OBJS=$(addprefix $(OBJ_DIR)/, $(patsubst %.cpp,%.o,$(SOURCES)))
 

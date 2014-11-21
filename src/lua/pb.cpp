@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <lua/lua.hpp>
+#include <luajit/lua.hpp>
 //#include "pb.hpp"
 #ifdef _ALLBSD_SOURCE
 #include <machine/endian.h>
