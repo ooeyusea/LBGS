@@ -20,7 +20,7 @@ function init()
 	
 	math.randomseed(os.time())
 
-	local config = require "Config"
+	config = require "Config"
 	local node = config:getNodeConfig()
 	
 	require "net.Core"

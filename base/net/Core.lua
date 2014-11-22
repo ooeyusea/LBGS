@@ -14,9 +14,8 @@ function Core:new(...)
     return ret
 end
 
-function Core:ctor(config, listener)
+function Core:ctor(config)
 	self.config = config
-	self.listener = listener
 	self.manager = NodeManager:new()
 	self.proto = {}
 	
@@ -44,6 +43,10 @@ end
 
 function Core:listenNode(port)
 	return Net.startListen(port, NodeSession:new(self))
+end
+
+function Core:addNodeEventListener(listener)
+	table.insert(self.nodeEventListeners, listener)
 end
 
 --------------------------------------------- util  ---------------------------------------------
@@ -202,12 +205,12 @@ function Core:run()
 		if msg.type == "NETMESSAGE" then
 			self:handle(msg.node, string.unserialize(msg.msg))
 		elseif msg.type == "OPENEED" then
-			if self.listener then
-				self.listener:onOpen(msg.node)
+			for i, listener in ipairs(self.nodeEventListeners) do
+				listener:onOpen(msg.node)
 			end
 		elseif msg.type == "CLOSED" then
-			if self.listener then
-				self.listener:onClose(msg.node)
+			for i, listener in ipairs(self.nodeEventListeners) do
+				listener:onClose(msg.node)
 			end
 		end
 	end
@@ -315,6 +318,10 @@ function Core:randCall(nodeType, func, wait, ...)
 			error("rand call "..func.." node["..nodeType.."] unreachable")
 		end
 	end
+end
+
+function Core:wildCall(func, ...)
+	self.manager:brocastNode(self:buildMessage(string.serialize("RPCNR", func, ...))
 end
 
 function Core:ret(...)

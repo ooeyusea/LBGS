@@ -20,21 +20,26 @@ function init()
 	
 	math.randomseed(os.time())
 
-    app = require "application.App"
+	local config = require "Config"
+	local node = config:getNodeConfig()
 	
-	if not app:init() then
-		return false
+	require "net.Core"
+	core = Core:new(node)
+	if node.port ~= nil then
+		if not core:listenNode(node.port) then
+			error("start listen node failed")
+		end
 	end
-
-    return true
+	
+	require "app.init"
 end
 
 function run()
-    app:run()
+    core:run()
 end
 
 function release()
-	app:release()
+
 end
 
 local status, msg = xpcall(init, __G__TRACKBACK__)
@@ -42,4 +47,4 @@ if not status then
     error(msg)
 end
 
-return true
+return status
