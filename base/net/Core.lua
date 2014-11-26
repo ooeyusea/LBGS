@@ -4,6 +4,13 @@ require "proto.NodeProtocol_pb"
 require "proto.NodeProto"
 require "net.Net"
 
+function printtable(t)
+	print("table print")
+	for k, v in pairs(t) do
+		print(tostring(k).." "..tostring(v))
+	end
+end
+
 Core = {}
 
 function Core:new(...)
@@ -27,6 +34,9 @@ function Core:ctor(config)
 	self.co_sequence_node = {}
 	self.wait_sequence = {}
 	
+	self.mysqls = {}
+	self.wait_sql = {}
+	
 	self.mutexId = 0
 	self.mutexs = {}
 	self.co_mutex = {}
@@ -35,6 +45,8 @@ function Core:ctor(config)
 	self.fork_queue = {}
 	
 	self.msg_queue = {}
+	
+	self.nodeEventListeners = {}
 end
 
 function Core:openNode(uri)
@@ -47,6 +59,23 @@ end
 
 function Core:addNodeEventListener(listener)
 	table.insert(self.nodeEventListeners, listener)
+end
+
+function Core:startMysql(host, port, db, user, password, flag, charset)
+	local mysql = DBModule.create()
+	if not mysql:init(user, host, db, password, port, flag, charset) then
+		mysql:release()
+		return nil
+	end
+	table.insert(self.mysqls, mysql)
+	return #self.mysqls
+end
+
+function Core:release()
+	for i, v in ipairs(self.mysqls) do
+		v:release()
+	end
+	self.mysqls = {}
 end
 
 --------------------------------------------- util  ---------------------------------------------
@@ -138,6 +167,10 @@ function Core:coroutineCall(co, seq)
 	self.wait_sequence[seq] = co
 end
 
+function Core:coroutineSQL(co, seq)
+	self.wait_sql[seq] = co
+end
+
 function Core:coroutineLock(co, mutex)
 	table.insert(self.mutexs[mutex], co)
 end
@@ -166,6 +199,8 @@ function Core:suspend(co, result, command, ...)
 		self:coroutineExit(co)
 	elseif command == "CALL" then
 		self:coroutineCall(co, ...)
+	elseif command == "SQL" then
+		self:coroutineSQL(co, ...)
 	elseif command == "LOCK" then
 		self:coroutineLock(co, ...)
 	elseif command == "RETURN" then
@@ -239,6 +274,10 @@ function Core:run()
 			end
 		end
 	end
+	
+	for i, v in ipairs(self.mysqls) do
+		v:run()
+	end
 end
 
 --------------------------------------------- proto ---------------------------------------------
@@ -294,7 +333,7 @@ end
 
 function Core:call(node, func, wait, ...)
 	if wait then
-		local seq = self:nextSeq()
+		local seq = self:getNextSeq()
 		if not self:send(node, "RPC", seq, func, ...) then
 			error("call "..func.." node["..node.nodeType..":"..node.nodeId.."] unreachable")
 		end
@@ -321,12 +360,53 @@ function Core:randCall(nodeType, func, wait, ...)
 end
 
 function Core:wildCall(func, ...)
-	self.manager:brocastNode(self:buildMessage(string.serialize("RPCNR", func, ...))
+	self.manager:brocastNode(self:buildMessage(string.serialize("RPCNR", func, ...)))
 end
 
 function Core:ret(...)
 	return coroutine.yield("RETURN", ...)
 end
+
+------------------------------------------------ mysql ------------------------------------------------
+
+function Core:waitSql(seq)
+	return function(...)
+		if self.wait_sql[seq] ~= nil then
+			local co = self.wait_sql[seq]
+			if co then
+				self.wait_sql[seq] = nil
+				return self:suspend(co, coroutine.resume(co, ...))
+			end
+		end
+	end
+end
+
+function Core:query(mysql, sql)
+	if self.mysqls[mysql] ~= nil then
+		local seq = self:getNextSeq()
+		self.mysqls[mysql]:query(sql, self:waitSql(seq))
+		return coroutine.yield("SQL", seq)
+	end
+	
+	return false, "unknown mysql"
+end
+
+function Core:exec(mysql, sql, wait)
+	if self.mysqls[mysql] ~= nil then
+		if wait then
+			local seq = self:getNextSeq()
+			self.mysqls[mysql]:exec(sql, self:waitSql(seq))
+			return coroutine.yield("SQL", seq)
+		else
+			self.mysqls[mysql]:exec(sql, function() end)
+			return true
+		end
+	else
+		return false, "unknown mysql"
+	end
+end
+
+----------------------------------------------- lock -----------------------------------------------------
 
 function Core:lock(mutex)
 	if mutex == nil then
@@ -358,6 +438,14 @@ function Core:unlock(mutex)
 	end
 end
 
+function Core:isLocked(mutex)
+	if mutex == nil then
+		return false
+	end
+	
+	return self.mutexs[mutex].used
+end
+
 -------------------------------------------- session --------------------------------------------
 
 function Core:readNode(session, msg)
@@ -371,7 +459,7 @@ function Core:readNode(session, msg)
     local next,msgBody = string.unpack(msg,"A"..(len1 -4), next)
 	local info = NodeProtocol_pb.Report()
 	if pcall(info.ParseFromString, info, msgBody) then
-		session.remoteNode = { nodeType = info.nodeType, nodeId = info.nodeId }
+		session.remoteNode = { nodeType = info.nodeType, nodeId = info.nodeId, uri = info.uri }
 		self.manager:register(session.remoteNode, session, info.uri)
 		
 		table.insert(self.msg_queue, { type = "OPENEED", node = session.remoteNode} )

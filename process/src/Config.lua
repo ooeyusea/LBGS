@@ -2,9 +2,8 @@
 local Config = {}
 
 function Config:loadFrom(filename)
-	self.node = {nodeType = "gate", nodeId = "1", uri = "" }
+	self.node = {nodeType = "data", nodeId = "1", uri = "" }
 	self.master = "127.0.0.1:7700"
-	self.apPort = 7200
 end
 
 function Config:init()
@@ -17,14 +16,6 @@ end
 
 function Config:getNodeConfig()
 	return self.node
-end
-
-function Config:getAPPort()
-	return self.apPort
-end
-
-function Config:getNode()
-	return { nodeType = self.node.nodeType, nodeId = self.node.nodeId }
 end
 
 function Config:getMaster()

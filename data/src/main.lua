@@ -19,24 +19,30 @@ function init()
 	package.path = package.path..";../base/?.lua;../base/protobuf/?.lua"
 	
 	math.randomseed(os.time())
-	
-	require "Config"
-	require "net.NetInit"
-	require "player.PlayerManager"
-	require "player.Player"
-	if not Net.Manager:init() then
-		return false
-	end
 
-    return true
+	local config = require "Config"
+	config:init()
+	local node = config:getNodeConfig()
+	
+	require "net.Core"
+	core = Core:new(node)
+	if node.port ~= nil then
+		if not core:listenNode(node.port) then
+			error("start listen node failed")
+		end
+	end
+	
+	core:openNode(config:getMaster())
+	
+	require "app.init"
 end
 
 function run()
-    
+    core:run()
 end
 
 function release()
-	Net.Manager:release()
+	core:release()
 end
 
 local status, msg = xpcall(init, __G__TRACKBACK__)
@@ -44,4 +50,4 @@ if not status then
     error(msg)
 end
 
-return true
+return status

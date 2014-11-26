@@ -23,6 +23,12 @@ function destroyPlayer(node, id)
 	end
 end
 
+function sendToPlayer(guid, msg)
+	if playersForGuid[guid] ~= nil then
+		playersForGuid[guid]:send(msg)
+	end
+end
+
 function kickoff(node, id)
 	if players[node.nodeId] ~= nil and players[node.nodeId][id] ~= nil then
 		remove(players[node.nodeId][id], true)
@@ -88,5 +94,20 @@ function remove(player, notify)
 	player.dead = true
 	if notify then
 		core:call(player.node, "kickoff", false, player.id)
+	end
+end
+
+function gateBroken(nodeId)
+	if players[nodeId] ~= nil then
+		for k, player in pairs(players[nodeId]) do
+			if player.username ~= nil then
+				playersForUsername[player.platform][player.server][player.username] = nil
+			end
+			if player.guid ~= nil then
+				playersForGuid[player.guid] = nil
+			end
+			player.dead = true
+		end
+		players[nodeId] = nil
 	end
 end

@@ -12,6 +12,7 @@
 #include "net/Connection.h"
 #include "net/NetModule.h"
 #include "time/TimerQueue.h"
+#include "mysql/DBModule.h"
 #include "lua_constants.h"
 
 namespace lua_extend {
@@ -225,11 +226,93 @@ int registerTimerQueueFunctionCreate(lua_State * state)
 	return 0;
 }
 
-void RegisterTimerQueue(lua_State * state)
+void registerTimerQueue(lua_State * state)
 {
 	createClass(state, "TimerQueue");
 	createClassFunction(state, "TimerQueue", "instance", registerTimerQueueFunctionInstance);
 	createClassFunction(state, "TimerQueue", "create", registerTimerQueueFunctionCreate);
+}
+
+int registerDBModuleFunctionCreate(lua_State * state)
+{
+	pushObject<DBModule>(state, "DBModule", new DBModule);
+	return 1;
+}
+
+int registerDBModuleFunctionRelease(lua_State * state)
+{
+	DBModule * t = toObject<DBModule>(state, -3, "DBModule");
+	if (t)
+	{
+		t->release();
+		delete t;
+	}
+	return 1;
+}
+
+int registerDBModuleFunctionInit(lua_State * state)
+{
+	DBModule * t = toObject<DBModule>(state, -8, "DBModule");
+	const char * user = lua_tostring(state, -7);
+	const char * host = lua_tostring(state, -6);
+	const char * db = lua_tostring(state, -5);
+	const char * password = lua_tostring(state, -4);
+	int port = (int)lua_tonumber(state, -3);
+	int flag = (int)lua_tonumber(state, -2);
+	const char * charset = lua_tostring(state, -1);
+	
+	if (t && t->init(user, host, db, password, port, flag, charset))
+	{
+		lua_pushboolean(state, true);
+	}
+	else
+		lua_pushboolean(state, false);
+	return 1;
+}
+
+int registerDBModuleFunctionQuery(lua_State * state)
+{
+	DBModule * t = toObject<DBModule>(state, -3, "DBModule");
+	const char * sql = lua_tostring(state, -2);
+	int handler = retainScriptFunctionHandler(state, -1);
+	if (t && handler > 0)
+	{
+		t->query(sql, handler);
+	}
+	return 0;
+}
+
+int registerDBModuleFunctionExecute(lua_State * state)
+{
+	DBModule * t = toObject<DBModule>(state, -3, "DBModule");
+	const char * sql = lua_tostring(state, -2);
+	int handler = retainScriptFunctionHandler(state, -1);
+	if (t && handler > 0)
+	{
+		t->execute(sql, handler);
+	}
+	return 0;
+}
+
+int registerDBModuleFunctionRun(lua_State * state)
+{
+	DBModule * t = toObject<DBModule>(state, -1, "DBModule");
+	if (t)
+	{
+		t->run(0);
+	}
+	return 0;
+}
+
+void registerDBModule(lua_State * state)
+{
+	createClass(state, "DBModule");
+	createClassFunction(state, "DBModule", "create", registerDBModuleFunctionCreate);
+	createClassFunction(state, "DBModule", "release", registerDBModuleFunctionRelease);
+	createClassFunction(state, "DBModule", "init", registerDBModuleFunctionInit);
+	createClassFunction(state, "DBModule", "query", registerDBModuleFunctionQuery);
+	createClassFunction(state, "DBModule", "exec", registerDBModuleFunctionExecute);
+	createClassFunction(state, "DBModule", "run", registerDBModuleFunctionRun);
 }
 
 void registerNetToLua(lua_State * state)
@@ -238,7 +321,8 @@ void registerNetToLua(lua_State * state)
 	registerAcceptor(state);
 	registerConnector(state);
 	registerConnection(state);
-	RegisterTimerQueue(state);
+	registerTimerQueue(state);
+	registerDBModule(state);
 }
 
 } /* namespace lua_extend */

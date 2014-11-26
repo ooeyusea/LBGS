@@ -1,7 +1,7 @@
 
 nodes = {}
 
-core:addNodeEventListener({ onOpen = function(node)
+core:addNodeEventListener({ onOpen = function(self, node)
 	if nodes[node.nodeType] == nil then
 		nodes[node.nodeType] = {}
 	end
@@ -11,7 +11,7 @@ core:addNodeEventListener({ onOpen = function(node)
 	core:fork(function() 
 		core:wildCall("newNode", node) 
 	end)
-end, onClose = function(node)
+end, onClose = function(self, node)
 
 end})
 

@@ -10,18 +10,18 @@ end
 
 function Cluster:ctor(...)
 	self.nodes = {}
-	self.node_wather = {}
+	self.node_watcher = {}
 	
 	for i, v in ipairs{...} do
-		self.node_wather[v] = true
+		self.node_watcher[v] = true
 	end
 	
-	core:addNodeEventListener({ onOpen = function(node)
+	core:addNodeEventListener({ onOpen = function(listener, node)
 		if node.nodeType == "master" then
 			core:fork(function() 
 				local allNodes = core:call(node, "getNodes", true)
 				for k, v in pairs(allNodes) do
-					if self.node_wather[k] then
+					if self.node_watcher[k] then
 						for j, u in ipairs(v) do
 							if self.nodes[k] == nil then
 								self.nodes[k] = {}
@@ -36,12 +36,12 @@ function Cluster:ctor(...)
 				end
 			end)
 		end
-	end, onClose = function(node)
+	end, onClose = function(listener, node)
 
 	end})
 
 	core:register("newNode", "", function(node)
-		if self.node_wather[node.nodeType] then
+		if self.node_watcher[node.nodeType] then
 			if self.nodes[node.nodeType] == nil then
 				self.nodes[node.nodeType] = {}
 			end

@@ -1,4 +1,5 @@
 require "net.Cluster"
+require "app.ClientSession"
 
 cluster = Cluster:new("transit")
 sessionManager = ClientSession.SessionManager:new()
@@ -16,6 +17,10 @@ core:addNodeEventListener({
 	end
 })
 
-core:register("kickoff", function(id)
+core:register("kickoff", "", function(id)
 	sessionManager:close(id)
+end)
+
+core:register("sendToClient", "", function(id, msg)
+	sessionManager:send(id, msg)
 end)

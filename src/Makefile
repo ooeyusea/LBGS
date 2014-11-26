@@ -4,21 +4,22 @@ EXCLUDE_DIRS := $(shell find . -maxdepth 3 -type d | grep .svn)
 DIRS := $(filter-out $(EXCLUDE_DIRS),$(ALL_DIRS))
 OBJS=$(patsubst %.cpp,%.o,$(SOURCES))
 INCS=-I./ 
-LIBS=-lluajit-5.1
+LIBS=-L/usr/lib64/mysql -lluajit-5.1 -lmysqlclient
 OBJ_DIR=../output
 TARGET=../bin/serverd
-CXXFLAGS=-O0 -g 
+CXXFLAGS=-O0 -g -std=c++11 
+XX=/usr/local/bin/g++
 
 OUTPUT_OBJS=$(addprefix $(OBJ_DIR)/, $(patsubst %.cpp,%.o,$(SOURCES)))
 
 $(OBJ_DIR)/%.o : %.cpp
-	g++ $(CXXFLAGS) $(INCS) -c $< -o $(OBJ_DIR)/$@
+	$(XX) $(CXXFLAGS) $(INCS) -c $< -o $(OBJ_DIR)/$@
 
 .PHONY : all
 all : dirs main
 
 main : $(OUTPUT_OBJS)
-	g++ -o $(TARGET) $(CXXFLAGS) $^ $(LIBS)
+	$(XX) -o $(TARGET) $(CXXFLAGS) $^ $(LIBS)
 
 test :
 	@echo $(DIRS)

@@ -207,6 +207,23 @@ void LuaStack::pushNil()
     lua_pushnil(_state);
 }
 
+void LuaStack::pushResultSet(std::vector<std::vector<std::string>>& rs)
+{
+	lua_newtable(_state);
+	int i = 1;
+	for (auto& row : rs)
+	{
+		lua_newtable(_state);
+		int j = 1;
+		for (auto& field : row)
+		{
+			lua_pushlstring(_state, field.c_str(), field.size());
+			lua_rawseti(_state, -2, j++);
+		}
+		lua_rawseti(_state, -2, i++);
+	}
+}
+
 int LuaStack::executeFunction(int numArgs)
 {
     int functionIndex = -(numArgs + 1);
@@ -314,14 +331,19 @@ void LuaStack::releaseScriptFunctionHandler(int handler)
 	lua_extend::releaseScriptFunctionHandler(_state, handler);
 }
 
-bool LuaStack::executeScriptFunction(int handler)
+bool LuaStack::executeScriptFunction(int handler, int numArgs)
 {
-	if (!lua_extend::pushScriptFunctionByHandler(_state, handler))
+	if (!lua_extend::pushScriptFunctionByHandler(_state, handler)) /* L: arg1 arg2 ... func */
 	{
 		return false;
 	}
+	
+	if (numArgs > 0)
+	{
+		lua_insert(_state, -(numArgs + 1)); /* L: func arg1 arg2 ... */
+	}
 
-	return executeFunction(0) != 0;
+	return executeFunction(numArgs) != 0;
 }
 
 } /* namespace lua_extend */

@@ -100,6 +100,11 @@ void LuaEngine::pushNil()
 	_stack.pushNil();
 }
 
+void LuaEngine::pushResultSet(std::vector<std::vector<std::string>>& rs)
+{
+	_stack.pushResultSet(rs);
+}
+
 int LuaEngine::executeFunction(int numArgs)
 {
 	return _stack.executeFunction(numArgs);
@@ -123,6 +128,11 @@ void LuaEngine::removeScriptFunction(int handler)
 bool LuaEngine::executeScriptFunction(int handler)
 {
 	return _stack.executeScriptFunction(handler);
+}
+
+bool LuaEngine::executeScriptFunction(int handler, int numArgs)
+{
+	return _stack.executeScriptFunction(handler, numArgs);
 }
 
 } /* namespace lua_extend */

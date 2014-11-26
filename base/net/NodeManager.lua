@@ -72,7 +72,7 @@ function NodeManager:sendToNodeByType(nodeType, msg)
 end
 
 function NodeManager:brocastNode(msg)
-	for j, u in pairs(nodes) do
+	for j, u in pairs(self.nodes) do
 		for k, v in pairs(u) do
 			v.session:send(msg)
 		end

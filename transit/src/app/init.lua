@@ -15,10 +15,14 @@ core:register("doPlayerMessage", "", function(node, id, msg)
 	PlayerManager.dispatchMessage(node, id, msg)
 end)
 
+core:register("sendToPlayer", "", function(guid, msg)
+	PlayerManager.sendToPlayer(guid, msg)
+end)
+
 core:addNodeEventListener({
-	onOpen = function(node)
+	onOpen = function(self, node)
 	
-	end, onClose = function(node)
+	end, onClose = function(self, node)
 		if node.nodeType == "gate" then
 			PlayerManager.gateBroken(node.nodeId)
 		end

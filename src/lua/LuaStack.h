@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <string>
 #include "luafunction.h"
+#include <string>
+#include <vector>
 
 namespace lua_extend {
 
@@ -41,6 +43,7 @@ public:
     void pushString(const char* stringValue, int length);
     bool pushScriptObjectByHandler(int handler);
     void pushNil();
+	void pushResultSet(std::vector<std::vector<std::string>>& rs);
 
 	template <typename T>
 	void pushObject(const std::string& name, T * t)
@@ -56,7 +59,7 @@ public:
 
     int retainScriptFunctionHandler(int index);
     void releaseScriptFunctionHandler(int handler);
-    bool executeScriptFunction(int handler);
+    bool executeScriptFunction(int handler, int numArgs = 0);
 
 private:
     lua_State * _state;

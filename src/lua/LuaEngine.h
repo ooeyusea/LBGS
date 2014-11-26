@@ -35,6 +35,7 @@ public:
     void pushString(const char* stringValue);
     void pushString(const char* stringValue, int length);
     void pushNil();
+	void pushResultSet(std::vector<std::vector<std::string>>& rs);
 
 	template <typename T>
 	void pushObject(const std::string& name, T * t)
@@ -49,6 +50,7 @@ public:
 
 	void removeScriptFunction(int handler);
 	bool executeScriptFunction(int handler);
+	bool executeScriptFunction(int handler, int numArgs);
 
 private:
 	LuaStack _stack;

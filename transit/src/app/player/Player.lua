@@ -46,6 +46,10 @@ function Player:login(info)
 	core:call(self.node, "sendToClient", false, self.id, ClientPacketBuilder:buildLoginSuccAck(self.username, self.guid))
 end
 
+function Player:send(msg)
+	core:call(self.node, "sendToClient", false, self.id, msg)
+end
+
 function Player:dispatch(cmd, msg)
 	if self.online then
 		core:randCall("center", "dispatch", self.guid, cmd, msg)

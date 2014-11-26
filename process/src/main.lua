@@ -32,6 +32,8 @@ function init()
 		end
 	end
 	
+	core:openNode(config:getMaster())
+	
 	require "app.init"
 end
 
@@ -40,7 +42,7 @@ function run()
 end
 
 function release()
-
+	core:release()
 end
 
 local status, msg = xpcall(init, __G__TRACKBACK__)
